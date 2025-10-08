@@ -5,11 +5,9 @@ from ui.upload_view import UploadView
 
 def main(page: ft.Page):
     page.title = "Fiber Thickness Analyzer"
-    page.window_width = 1200
-    page.window_height = 1200
-    page.theme_mode = "light"
+    page.vertical_alignment = ft.MainAxisAlignment.CENTER
+    page.window.maximized = True
 
-    # Навигация между экранами
     views = {
         "upload": UploadView(page),
         #"transform": TransformView(page),
