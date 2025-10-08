@@ -6,6 +6,7 @@ from IPython.display import display
 
 class Transform:
     _transform_methods = []
+    _visualization_key = None
 
     def __init_subclass__(cls, **kwargs):
         super().__init_subclass__(**kwargs)
@@ -14,6 +15,18 @@ class Transform:
         for name, method in cls.__dict__.items():
             if isfunction(method) and not name.startswith("_"):
                 cls._transform_methods.append(method)
+                last_name = name
+
+        if len(cls._transform_methods) == 1:
+            cls._visualization_key = last_name
+
+    def __getattribute__(self, name):
+        value = super().__getattribute__(name)
+        
+        if name == '_visualization_key' and value is None:
+            raise ValueError(f'{self.__class__.__name__} implemented with multiple transformations. Set _visualization_key manually')
+        
+        return value
 
     def __setattr__(self, name, value):
         if name.startswith("_") or isfunction(value):
@@ -45,6 +58,9 @@ class Transform:
             new_data_node[name] = result
 
         return new_data_node
+    
+    def get_visualization_key(self):
+        return self._visualization_key
 
     def get_sliders(self):
         sliders = {}

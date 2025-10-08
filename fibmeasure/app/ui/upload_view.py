@@ -73,6 +73,6 @@ class UploadView(ft.View):
             self.next_step(e)
 
     def next_step(self, e):
-        self.page.client_storage.set("source_path", self.source_path)
-        self.page.client_storage.set("pixel_spacing", float(self.pixel_spacing_tf.value))
+        self.page.session.set("source_path", self.source_path)
+        self.page.session.set("pixel_spacing", float(self.pixel_spacing_tf.value))
         self.page.go("transform")
