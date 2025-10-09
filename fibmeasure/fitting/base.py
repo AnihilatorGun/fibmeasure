@@ -28,17 +28,6 @@ class Transform:
         
         return value
 
-    def __setattr__(self, name, value):
-        if name.startswith("_") or isfunction(value):
-            super().__setattr__(name, value)
-            return
-
-        if not hasattr(self, "_changable_params"):
-            super().__setattr__("_changable_params", {})
-
-        self._changable_params[name] = value
-        super().__setattr__(name, value)
-
     def __call__(self, data_node):
         new_data_node = copy(data_node)
 
@@ -61,30 +50,19 @@ class Transform:
     
     def get_visualization_key(self):
         return self._visualization_key
+    
+    def configure_slider(self, name, min, max, step, value_type):
+        if not hasattr(self, 'slider_configs'):
+            self.slider_configs = {}
+
+        self.slider_configs[name] = (min, max, step, value_type)
 
     def get_sliders(self):
-        sliders = {}
-        for name, value in self._changable_params.items():
-            slider = None
-            
-            if isinstance(value, int):
-                slider = widgets.IntSlider(value=value, min=0, max=value*2 or 10, description=name)
-            elif isinstance(value, float):
-                slider = widgets.FloatSlider(value=value, min=0.0, max=value*2 or 1.0, step=0.01, description=name)
-            elif isinstance(value, bool):
-                slider = widgets.SelectionSlider(value=value, options=[True, False], description=name)
-            sliders[name] = slider
-        return sliders
+        slider_configs = getattr(self, 'slider_configs', {})
 
-    def interactive_view(self, data_node, visualize_func):
-        sliders = self.get_sliders()
+        slider_params = {}
 
-        def update(**kwargs):
-            for k, v in kwargs.items():
-                setattr(self, k, v)
-            result = self(data_node)
-            visualize_func(result)
+        for param, (min, max, step, value_type) in slider_configs.items():
+            slider_params[param] = (min, max, step, getattr(self, param), value_type)
 
-        out = widgets.interactive_output(update, sliders)
-        display(widgets.VBox(list(sliders.values())))
-        display(out)
+        return slider_params
