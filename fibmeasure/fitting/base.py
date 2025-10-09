@@ -1,7 +1,5 @@
 from copy import copy
 from inspect import signature, isfunction
-import ipywidgets as widgets
-from IPython.display import display
 
 
 class Transform:

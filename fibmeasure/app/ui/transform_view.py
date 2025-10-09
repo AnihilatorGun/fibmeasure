@@ -4,7 +4,7 @@ import io
 import numpy as np
 from PIL import Image
 from skimage.io import imread
-from fibmeasure.fitting.transforms import Binarize, Opening, CCSFilter, Skeletonize, LinFit
+from fibmeasure.fitting.transforms import RichardsonLucyDeconv, Binarize, Opening, CCSFilter, SkeletonizeEDT, LinFit
 
 
 def np_grayscale_to_base64(img):
@@ -22,10 +22,11 @@ def np_grayscale_to_base64(img):
 
 class TransformChain:
     transforms = [
+        RichardsonLucyDeconv(),
         Binarize(),
         Opening(),
         CCSFilter(),
-        Skeletonize(),
+        SkeletonizeEDT(),
         LinFit()
     ]
 
@@ -152,6 +153,14 @@ class TransformView(ft.View):
 
         self.update_images()
 
+    def disable_buttons(self):
+        self.prev_btn.disabled = True
+        self.next_btn.disabled = True
+
+    def enable_buttons(self):
+        self.prev_btn.disabled = False
+        self.next_btn.disabled = False
+
     def update_images(self):
         before_image, after_image = self.transform_manager.get_before_after_images()
         self.before_image.src_base64 = np_grayscale_to_base64(before_image)
@@ -189,16 +198,18 @@ class TransformView(ft.View):
         return view_content
 
     def on_slider_change(self, e: ft.ControlEvent):
+        self.disable_buttons()
+        self.page.update()
+
         name = e.control.data
         value = e.control.value
         value_type = self.name2value_type[name]
 
         self.transform_manager.update_param(name, value_type(value))
-
         self.update_images()
-
         self.name2param_text[name].value = f"{name}: {value_type(value):.4f}"
 
+        self.enable_buttons()
         self.page.update()
 
     def prev_click(self, e):

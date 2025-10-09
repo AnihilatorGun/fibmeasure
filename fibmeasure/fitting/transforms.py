@@ -1,9 +1,26 @@
 import numpy as np
 from imops import binary_dilation, binary_opening, label
-from skimage.morphology import disk, skeletonize
+from imops.morphology import distance_transform_edt
+from skimage.feature import peak_local_max
+from skimage.morphology import disk
+from skimage.restoration import richardson_lucy
 
 from .base import Transform
 from .ops import blocked_lin_fit
+
+
+class RichardsonLucyDeconv(Transform):
+    def __init__(self, psf_size=4, num_iter=4):
+        self.psf_size = psf_size
+        self.num_iter = num_iter
+        self.configure_slider('psf_size', 2, 9, 1, int)
+        self.configure_slider('num_iter', 1, 30, 1, int)
+
+    def image(self, image):
+        psf = np.ones((self.psf_size, self.psf_size))
+        psf /= psf.size
+
+        return richardson_lucy(image, psf, num_iter=self.num_iter)
 
 
 class Binarize(Transform):
@@ -36,18 +53,30 @@ class CCSFilter(Transform):
         return np.isin(ccs, labels[ratios >= self.min_ratio])
 
 
-class Skeletonize(Transform):
-    def __init__(self, dilation_radius=3):
+class SkeletonizeEDT(Transform):
+    def __init__(self, threshold_abs=5, dilation_radius=0, min_size=10):
+        self.threshold_abs = threshold_abs
         self.dilation_radius = dilation_radius
-        self.configure_slider('dilation_radius', 0, 16, 1, int)
+        self.min_size = min_size
+        self.configure_slider('threshold_abs', 1, 50, 0.1, float)
+        self.configure_slider('dilation_radius', 0, 4, 1, int)
+        self.configure_slider('min_size', 1, 1000, 1, int)
 
     def skeleton(self, bin_image):
-        skeleton = skeletonize(bin_image)
+        dist = distance_transform_edt(bin_image)
+        peaks = peak_local_max(dist, min_distance=1, threshold_abs=self.threshold_abs, labels=bin_image)
+
+        skeleton = np.zeros_like(bin_image)
+
+        for point in peaks:
+            skeleton[*point] = True
 
         if self.dilation_radius > 0:
             skeleton = binary_dilation(skeleton, disk(self.dilation_radius))
 
-        return skeleton
+        ccs, labels, sizes = label(skeleton, return_labels=True, return_sizes=True)
+
+        return np.isin(ccs, labels[sizes >= self.min_size])
 
 
 class LinFit(Transform):
