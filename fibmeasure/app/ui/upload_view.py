@@ -24,10 +24,10 @@ class UploadView(ft.View):
         self.next_btn = ft.ElevatedButton("Next step", on_click=self.next_button_click, disabled=True)
 
         self.pixel_spacing_tf = ft.TextField(
-            label="Pixel spacing", 
-            width=600, 
+            label="Pixel spacing",
+            width=600,
             helper_text='Must be a positive real number, separator - a period',
-            on_change=self.pixel_spacing_on_change
+            on_change=self.pixel_spacing_on_change,
         )
 
         self.controls = [
@@ -44,7 +44,7 @@ class UploadView(ft.View):
                     horizontal_alignment=ft.CrossAxisAlignment.CENTER,
                 ),
                 alignment=ft.alignment.center,
-                expand=True
+                expand=True,
             )
         ]
 
@@ -52,7 +52,9 @@ class UploadView(ft.View):
         value = e.control.value
 
         if not is_valid_pixel_spacing(value):
-            self.pixel_spacing_tf.error_text = 'Invalid pixel spacing. Must be a positive real number, separator - a period'
+            self.pixel_spacing_tf.error_text = (
+                'Invalid pixel spacing. Must be a positive real number, separator - a period'
+            )
         else:
             self.pixel_spacing_tf.error_text = None
 

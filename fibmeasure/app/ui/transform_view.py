@@ -4,6 +4,8 @@ import io
 import numpy as np
 from PIL import Image
 from skimage.io import imread
+
+from fibmeasure.app.pluggins.button import HoldButton
 from fibmeasure.fitting.transforms import RichardsonLucyDeconv, Binarize, Opening, CCSFilter, SkeletonizeEDT, LinFit
 
 
@@ -21,14 +23,7 @@ def np_grayscale_to_base64(img):
 
 
 class TransformChain:
-    transforms = [
-        RichardsonLucyDeconv(),
-        Binarize(),
-        Opening(),
-        CCSFilter(),
-        SkeletonizeEDT(),
-        LinFit()
-    ]
+    transforms = [RichardsonLucyDeconv(), Binarize(), Opening(), CCSFilter(), SkeletonizeEDT(), LinFit()]
 
     def __init__(self, source_image):
         self.source_image = source_image
@@ -49,14 +44,14 @@ class TransformChain:
     def next(self):
         if self.current_transform_idx == len(self.transforms) - 1:
             return False
-        
+
         self.current_transform_idx += 1
         return True
-    
+
     def prev(self):
         if self.current_transform_idx == 0:
             return False
-        
+
         self.current_transform_idx -= 1
         return True
 
@@ -72,7 +67,7 @@ class TransformChain:
             self.transform_result_nodes[transform_idx] = result_node
 
         return result_node
-    
+
     def get_result_image(self, transform_idx):
         if transform_idx == -1:
             return self.source_image
@@ -84,7 +79,7 @@ class TransformChain:
 
     def get_before_after_images(self):
         return self.get_result_image(self.current_transform_idx - 1), self.get_result_image(self.current_transform_idx)
-    
+
     def get_sliders(self):
         return self.transforms[self.current_transform_idx].get_sliders()
 
@@ -96,37 +91,44 @@ class TransformView(ft.View):
 
         source_path = page.session.get("source_path")
 
-        self.transform_manager = TransformChain(imread(source_path, as_gray=True).astype(np.float32))
+        source_image = imread(source_path, as_gray=True).astype(np.float32)
+        self._buffer_image = np_grayscale_to_base64(source_image)
+
+        self.transform_manager = TransformChain(source_image)
 
         self.prev_btn = ft.ElevatedButton("Previous", on_click=self.prev_click)
         self.next_btn = ft.ElevatedButton("Next", on_click=self.next_click)
 
         image_width = page.window.width * 0.5
         image_height = page.window.height * 0.6
-        self.before_image = ft.Image(
-            width=image_width,
-            height=image_height,
-            fit=ft.ImageFit.CONTAIN
-        )
-        self.after_image = ft.Image(
-            width=image_width,
-            height=image_height,
-            fit=ft.ImageFit.CONTAIN
-        )
+        self.before_image = ft.Image(width=image_width, height=image_height, fit=ft.ImageFit.CONTAIN)
+        self.after_image = ft.Image(width=image_width, height=image_height, fit=ft.ImageFit.CONTAIN)
 
-        self.header_text = ft.Text(f"Transform {self.transform_manager.current_transform_name()}", size=32, weight="bold")
+        self.header_text = ft.Text(
+            f"Transform {self.transform_manager.current_transform_name()}", size=32, weight="bold"
+        )
 
         self.slider_view = ft.Column(
             self.build_slider_view_content(),
             alignment=ft.MainAxisAlignment.CENTER,
-            horizontal_alignment=ft.CrossAxisAlignment.CENTER
+            horizontal_alignment=ft.CrossAxisAlignment.CENTER,
         )
 
         self.controls = [
             ft.Container(
                 ft.Column(
                     [
-                        self.header_text,
+                        ft.Row(
+                            [
+                                self.header_text,
+                                HoldButton(
+                                    'Show source image',
+                                    self.swap_right_image_with_buffer_image,
+                                    self.swap_right_image_with_buffer_image,
+                                ).build(),
+                            ],
+                            alignment=ft.MainAxisAlignment.CENTER,
+                        ),
                         ft.Row(
                             [
                                 self.before_image,
@@ -136,22 +138,27 @@ class TransformView(ft.View):
                         ),
                         self.slider_view,
                         ft.Row(
-                            [
-                                self.prev_btn,
-                                self.next_btn
-                            ],
+                            [self.prev_btn, self.next_btn],
                             alignment=ft.MainAxisAlignment.CENTER,
-                        )
+                        ),
                     ],
                     alignment=ft.MainAxisAlignment.CENTER,
                     horizontal_alignment=ft.CrossAxisAlignment.CENTER,
                 ),
                 alignment=ft.alignment.center,
-                expand=True
+                expand=True,
             )
         ]
 
         self.update_images()
+
+    def swap_right_image_with_buffer_image(self, e):
+        tmp = self._buffer_image
+
+        self._buffer_image = self.after_image.src_base64
+        self.after_image.src_base64 = tmp
+
+        self.after_image.update()
 
     def disable_buttons(self):
         self.prev_btn.disabled = True
@@ -180,15 +187,10 @@ class TransformView(ft.View):
                 division = 1
             else:
                 raise RuntimeError(f"Unknown value_type - {value_type}")
-            
+
             param_text = ft.Text(f"{name}: {curr_value:.4f}", size=16)
             slider = ft.Slider(
-                min=min,
-                max=max,
-                value=curr_value,
-                divisions=division,
-                data=name,
-                on_change=self.on_slider_change
+                min=min, max=max, value=curr_value, divisions=division, data=name, on_change=self.on_slider_change
             )
             view_content.append(param_text)
             view_content.append(slider)

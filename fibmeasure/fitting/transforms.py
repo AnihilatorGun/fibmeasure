@@ -80,7 +80,7 @@ class SkeletonizeEDT(Transform):
 
 
 class LinFit(Transform):
-    def __init__(self, abs_rvalue_thr = 0.8, block = 64, use_filtration_image = True, filtration_thr = 0.9):
+    def __init__(self, abs_rvalue_thr=0.8, block=64, use_filtration_image=True, filtration_thr=0.9):
         self.abs_rvalue_thr = abs_rvalue_thr
         self.block = block
         self.use_filtration_image = use_filtration_image
@@ -95,9 +95,9 @@ class LinFit(Transform):
         filtration_image = bin_image if self.use_filtration_image else None
 
         return blocked_lin_fit(
-            skeleton, 
+            skeleton,
             abs_rvalue_thr=self.abs_rvalue_thr,
             block=self.block,
             filtration_image=filtration_image,
-            filtration_thr=self.filtration_thr
+            filtration_thr=self.filtration_thr,
         )

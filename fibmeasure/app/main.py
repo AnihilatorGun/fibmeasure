@@ -1,7 +1,9 @@
 import flet as ft
 from ui.upload_view import UploadView
 from ui.transform_view import TransformView
-#from .ui.result_view import ResultView
+
+# from .ui.result_view import ResultView
+
 
 def main(page: ft.Page):
     page.title = "Fiber Thickness Analyzer"
@@ -11,7 +13,7 @@ def main(page: ft.Page):
     view_fabrics = {
         "upload": lambda: UploadView(page),
         "transform": lambda: TransformView(page),
-        #"result": lambda: ResultView(page),
+        # "result": lambda: ResultView(page),
     }
 
     def route_change(e: ft.RouteChangeEvent):
@@ -21,5 +23,6 @@ def main(page: ft.Page):
 
     page.on_route_change = route_change
     page.go("upload")
+
 
 ft.app(target=main)

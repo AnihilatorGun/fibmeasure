@@ -20,10 +20,12 @@ class Transform:
 
     def __getattribute__(self, name):
         value = super().__getattribute__(name)
-        
+
         if name == '_visualization_key' and value is None:
-            raise ValueError(f'{self.__class__.__name__} implemented with multiple transformations. Set _visualization_key manually')
-        
+            raise ValueError(
+                f'{self.__class__.__name__} implemented with multiple transformations. Set _visualization_key manually'
+            )
+
         return value
 
     def __call__(self, data_node):
@@ -45,10 +47,10 @@ class Transform:
             new_data_node[name] = result
 
         return new_data_node
-    
+
     def get_visualization_key(self):
         return self._visualization_key
-    
+
     def configure_slider(self, name, min, max, step, value_type):
         if not hasattr(self, 'slider_configs'):
             self.slider_configs = {}
