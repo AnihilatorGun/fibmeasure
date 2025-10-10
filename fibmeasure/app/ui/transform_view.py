@@ -5,7 +5,7 @@ import numpy as np
 from PIL import Image
 from skimage.io import imread
 
-from fibmeasure.app.pluggins.button import HoldButton
+from .pluggins import HoldButton
 from fibmeasure.fitting.transforms import RichardsonLucyDeconv, Binarize, Opening, CCSFilter, SkeletonizeEDT, LinFit
 
 
