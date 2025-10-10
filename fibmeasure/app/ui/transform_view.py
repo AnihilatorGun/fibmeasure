@@ -98,6 +98,11 @@ class TransformView(ft.View):
 
         self.prev_btn = ft.ElevatedButton("Previous", on_click=self.prev_click)
         self.next_btn = ft.ElevatedButton("Next", on_click=self.next_click)
+        self.show_source_btn = HoldButton(
+            'Show source image',
+            self.swap_right_image_with_buffer_image,
+            self.swap_right_image_with_buffer_image,
+        )
 
         image_width = page.window.width * 0.5
         image_height = page.window.height * 0.6
@@ -121,11 +126,7 @@ class TransformView(ft.View):
                         ft.Row(
                             [
                                 self.header_text,
-                                HoldButton(
-                                    'Show source image',
-                                    self.swap_right_image_with_buffer_image,
-                                    self.swap_right_image_with_buffer_image,
-                                ).build(),
+                                self.show_source_btn,
                             ],
                             alignment=ft.MainAxisAlignment.CENTER,
                         ),
@@ -163,10 +164,12 @@ class TransformView(ft.View):
     def disable_buttons(self):
         self.prev_btn.disabled = True
         self.next_btn.disabled = True
+        self.show_source_btn.disabled = True
 
     def enable_buttons(self):
         self.prev_btn.disabled = False
         self.next_btn.disabled = False
+        self.show_source_btn.disabled = False
 
     def update_images(self):
         before_image, after_image = self.transform_manager.get_before_after_images()
