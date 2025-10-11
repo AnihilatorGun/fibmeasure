@@ -1,13 +1,15 @@
-import base64
 import flet as ft
-import io
 import numpy as np
-from PIL import Image
 from skimage.io import imread
 
 from .pluggins import HoldButton
 from fibmeasure.app.core.transform_handler import TransformHandler
 from fibmeasure.app.core.utils import np_grayscale_to_base64
+
+
+IMAGE_WIDTH_RATIO = 0.5
+IMAGE_HEIGHT_RATIO = 0.6
+SLIDER_TEXT_ANNOTATION_WIDTH_PX = 400
 
 
 class TransformView(ft.View):
@@ -30,8 +32,8 @@ class TransformView(ft.View):
             self.swap_right_image_with_buffer_image,
         )
 
-        image_width = page.window.width * 0.5
-        image_height = page.window.height * 0.6
+        image_width = page.window.width * IMAGE_WIDTH_RATIO
+        image_height = page.window.height * IMAGE_HEIGHT_RATIO
         self.before_image = ft.Image(width=image_width, height=image_height, fit=ft.ImageFit.CONTAIN)
         self.after_image = ft.Image(width=image_width, height=image_height, fit=ft.ImageFit.CONTAIN)
 
@@ -102,6 +104,14 @@ class TransformView(ft.View):
         self.before_image.src_base64 = np_grayscale_to_base64(before_image)
         self.after_image.src_base64 = np_grayscale_to_base64(after_image)
 
+    def update_slider_text(self, name, value):
+        if isinstance(value, float):
+            value = f"{value:.4f}"
+        else:
+            value = str(value)
+
+        self.name2param_text[name].value = f"{name}: {value}"
+
     def build_slider_view_content(self):
         view_content = []
         self.name2value_type = {}
@@ -119,14 +129,15 @@ class TransformView(ft.View):
             else:
                 raise RuntimeError(f"Unknown value_type - {value_type}")
 
-            param_text = ft.Text(f"{name}: {curr_value:.4f}", size=16)
+            param_text = ft.Text(size=16, width=SLIDER_TEXT_ANNOTATION_WIDTH_PX)
             slider = ft.Slider(
-                min=min, max=max, value=curr_value, divisions=division, data=name, on_change=self.on_slider_change
+                min=min, max=max, value=curr_value, divisions=division, data=name, on_change=self.on_slider_change, expand=True
             )
-            view_content.append(param_text)
-            view_content.append(slider)
+            view_content.append(ft.Row([param_text, slider], alignment=ft.MainAxisAlignment.CENTER))
             self.name2value_type[name] = value_type
             self.name2param_text[name] = param_text
+
+            self.update_slider_text(name, value_type(curr_value))
 
         return view_content
 
@@ -140,7 +151,7 @@ class TransformView(ft.View):
 
         self.transform_manager.update_param(name, value_type(value))
         self.update_images()
-        self.name2param_text[name].value = f"{name}: {value_type(value):.4f}"
+        self.update_slider_text(name, value_type(value))
 
         self.enable_buttons()
         self.page.update()
