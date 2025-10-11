@@ -9,7 +9,7 @@ from fibmeasure.app.core.utils import np_grayscale_to_base64
 
 IMAGE_WIDTH_RATIO = 0.5
 IMAGE_HEIGHT_RATIO = 0.6
-SLIDER_TEXT_ANNOTATION_WIDTH_PX = 400
+SLIDER_TEXT_ANNOTATION_WIDTH_PX = 500
 
 
 class TransformView(ft.View):
@@ -104,21 +104,30 @@ class TransformView(ft.View):
         self.before_image.src_base64 = np_grayscale_to_base64(before_image)
         self.after_image.src_base64 = np_grayscale_to_base64(after_image)
 
-    def update_slider_text(self, name, value):
+    def update_slider_text(self, name, view_name, value):
         if isinstance(value, float):
             value = f"{value:.4f}"
         else:
             value = str(value)
 
-        self.name2param_text[name].value = f"{name}: {value}"
+        self.name2param_text[name].value = f"{view_name}: {value}"
 
     def build_slider_view_content(self):
         view_content = []
         self.name2value_type = {}
         self.name2param_text = {}
+        self.name2view_name = {}
 
         for name, slider_params in self.transform_manager.get_sliders().items():
-            min, max, step, curr_value, value_type = slider_params.min, slider_params.max, slider_params.step, slider_params.current_value, slider_params.dtype
+            view_name, min, max, step, curr_value, value_type, slider_annotation = (
+                slider_params.view_name,
+                slider_params.min,
+                slider_params.max,
+                slider_params.step,
+                slider_params.current_value,
+                slider_params.dtype,
+                slider_params.annotation,
+            )
 
             if value_type == float:
                 division = (max - min) / step
@@ -129,15 +138,25 @@ class TransformView(ft.View):
             else:
                 raise RuntimeError(f"Unknown value_type - {value_type}")
 
-            param_text = ft.Text(size=16, width=SLIDER_TEXT_ANNOTATION_WIDTH_PX)
+            param_text = ft.Text(size=16, expand=True)
+            annotation = ft.Text(slider_annotation, size=12, expand=True)
+            text = ft.Column([param_text, annotation], width=SLIDER_TEXT_ANNOTATION_WIDTH_PX)
             slider = ft.Slider(
-                min=min, max=max, value=curr_value, divisions=division, data=name, on_change=self.on_slider_change, expand=True
+                min=min,
+                max=max,
+                value=curr_value,
+                divisions=division,
+                data=name,
+                on_change=self.on_slider_change,
+                expand=True,
             )
-            view_content.append(ft.Row([param_text, slider], alignment=ft.MainAxisAlignment.CENTER))
+            view_content.append(ft.Row([text, slider], alignment=ft.MainAxisAlignment.CENTER))
+
             self.name2value_type[name] = value_type
             self.name2param_text[name] = param_text
+            self.name2view_name[name] = view_name
 
-            self.update_slider_text(name, value_type(curr_value))
+            self.update_slider_text(name, view_name, value_type(curr_value))
 
         return view_content
 
@@ -148,10 +167,11 @@ class TransformView(ft.View):
         name = e.control.data
         value = e.control.value
         value_type = self.name2value_type[name]
+        view_name = self.name2view_name[name]
 
         self.transform_manager.update_param(name, value_type(value))
         self.update_images()
-        self.update_slider_text(name, value_type(value))
+        self.update_slider_text(name, view_name, value_type(value))
 
         self.enable_buttons()
         self.page.update()

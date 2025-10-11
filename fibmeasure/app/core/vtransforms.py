@@ -8,11 +8,12 @@ type Param = int | float | bool
 
 @dataclass
 class SliderParams:
+    view_name: str
+    current_value: Param
     min: Param
     max: Param
     step: Param
     dtype: type
-    current_value: Param | None = None
     annotation: str | None = None
 
 
@@ -21,8 +22,7 @@ class TransformView:
         init_values = {}
 
         for name, slider_params in slider_configs.items():
-            if (current_value := slider_params.current_value) is not None:
-                init_values[name] = current_value
+            init_values[name] = slider_params.current_value
 
         self._transform = transform(**init_values)
         self._slider_configs = slider_configs
@@ -72,46 +72,46 @@ class TransformView:
 VRichardsonLucyDeconv = partial(
     TransformView,
     RichardsonLucyDeconv,
-    psf_size=SliderParams(min=2, max=9, step=1, dtype=int),
-    num_iter=SliderParams(min=1, max=30, step=1, dtype=int)
+    psf_size=SliderParams(view_name='PSF Size', current_value=4, min=2, max=9, step=1, dtype=int, annotation='Point spread function kernel size, kernel is square and uniform.'),
+    num_iter=SliderParams(view_name='Number of iterations', current_value=4, min=1, max=30, step=1, dtype=int, annotation='This parameter plays the role of regularisation. See skimage.restoration.richardson_lucy')
 )
 
 
 VBinarize = partial(
     TransformView,
     Binarize,
-    threshold=SliderParams(min=0, max=1, step=0.01, dtype=float)
+    threshold=SliderParams(view_name='Threshold', current_value=0.5, min=0, max=1, step=0.01, dtype=float, annotation='Binary threshold for grayscaled image.')
 )
 
 
 VOpening = partial(
     TransformView,
     Opening,
-    radius=SliderParams(min=0, max=16, step=1, dtype=int)
+    radius=SliderParams(view_name='Opening size', current_value=5, min=0, max=16, step=1, dtype=int, annotation='Kernel size for binary opening operation. This is approximately the maximum size of the connectivity components to be removed.')
 )
 
 
 VCCSFilter = partial(
     TransformView,
     CCSFilter,
-    min_ratio=SliderParams(min=1e-4, max=1e-2, step=1e-4, dtype=float)
+    min_ratio=SliderParams(view_name='Min size ratio', current_value=1e-3, min=1e-4, max=1e-2, step=1e-4, dtype=float, annotation='The ratio of the connectivity component volume to the image volume, below which the connectivity component is removed.')
 )
 
 
 VSkeletonizeEDT = partial(
     TransformView,
     SkeletonizeEDT,
-    threshold_abs=SliderParams(min=1, max=50, step=0.1, dtype=float),
-    dilation_radius=SliderParams(min=0, max=4, step=1, dtype=int),
-    min_size=SliderParams(min=1, max=1000, step=1, dtype=int)
+    threshold_abs=SliderParams(view_name='Min dist', current_value=5, min=1, max=50, step=0.1, dtype=float, annotation='Minimum distance from the extremum to the edge.'),
+    dilation_radius=SliderParams(view_name='Dilation size', current_value=1, min=0, max=4, step=1, dtype=int, annotation='The radius of expansion of the points obtained. Expansion is applied after finding the maximum points.'),
+    min_size=SliderParams(view_name='Min size', current_value=11, min=1, max=1000, step=1, dtype=int, annotation='Min size of connected component, filter is applied at the end.')
 )
 
 
 VLinFit = partial(
     TransformView,
     LinFit,
-    abs_rvalue_thr=SliderParams(min=0, max=1, step=0.01, dtype=float),
-    block=SliderParams(min=4, max=128, step=4, dtype=int),
-    use_filtration_image=SliderParams(min=0, max=1, step=1, dtype=bool),
-    filtration_thr=SliderParams(min=0, max=1, step=0.01, dtype=float),
+    block=SliderParams(view_name='Block size', current_value=64, min=4, max=128, step=4, dtype=int, annotation='The size of the block within which interpolation will take place.'),
+    abs_rvalue_thr=SliderParams(view_name='Minimal r-value', current_value=0.8, min=0, max=1, step=0.01, dtype=float, annotation='Minimal Pierson correlation coefficient'),
+    use_filtration_image=SliderParams(view_name='Use filtration image', current_value=True, min=0, max=1, step=1, dtype=bool, annotation='Whether to use the image from the previous step for additional filtering.'),
+    filtration_thr=SliderParams(view_name='Min filtration recall', current_value=0.9, min=0, max=1, step=0.01, dtype=float, annotation='How well the interpolated line inside the block should intersect with the image. Only works if use_filtration_image=True.'),
 )
