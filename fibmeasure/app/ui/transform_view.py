@@ -38,7 +38,10 @@ class TransformView(ft.View):
         self.after_image = ft.Image(width=image_width, height=image_height, fit=ft.ImageFit.CONTAIN)
 
         self.header_text = ft.Text(
-            f"Transform {self.transform_manager.current_transform_name()}", size=32, weight="bold"
+            f"Transform {self.transform_manager.current_transform_name}", size=32, weight="bold"
+        )
+        self.transform_annotation_text = ft.Text(
+            self.transform_manager.current_transform_annotation, size=24
         )
 
         self.slider_view = ft.Column(
@@ -58,6 +61,7 @@ class TransformView(ft.View):
                             ],
                             alignment=ft.MainAxisAlignment.CENTER,
                         ),
+                        self.transform_annotation_text,
                         ft.Row(
                             [
                                 self.before_image,
@@ -178,7 +182,8 @@ class TransformView(ft.View):
 
     def prev_click(self, e):
         if self.transform_manager.prev():
-            self.header_text.value = f"Transform {self.transform_manager.current_transform_name()}"
+            self.header_text.value = f"Transform {self.transform_manager.current_transform_name}"
+            self.transform_annotation_text.value = self.transform_manager.current_transform_annotation
 
             self.update_images()
 
@@ -190,7 +195,8 @@ class TransformView(ft.View):
 
     def next_click(self, e):
         if self.transform_manager.next():
-            self.header_text.value = f"Transform {self.transform_manager.current_transform_name()}"
+            self.header_text.value = f"Transform {self.transform_manager.current_transform_name}"
+            self.transform_annotation_text.value = self.transform_manager.current_transform_annotation
 
             self.update_images()
 

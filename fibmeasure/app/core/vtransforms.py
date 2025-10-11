@@ -18,7 +18,7 @@ class SliderParams:
 
 
 class TransformView:
-    def __init__(self, transform, visualization_key=None, transform_annotation=None, **slider_configs):
+    def __init__(self, transform, visualization_key=None, transform_name=None, transform_annotation=None, **slider_configs):
         init_values = {}
 
         for name, slider_params in slider_configs.items():
@@ -27,15 +27,16 @@ class TransformView:
         self._transform = transform(**init_values)
         self._slider_configs = slider_configs
         self.set_visualization_key(visualization_key)
+        self._transform_name = transform_name
         self._transform_annotation = transform_annotation
 
     @property
     def transform_name(self):
-        return self._transform.__class__.__name__
+        return self._transform.__class__.__name__ if self._transform_name is None else self._transform_name
     
     @property
-    def annotation(self):
-        return self._transform_annotation
+    def transform_annotation(self):
+        return '' if self._transform_annotation is None else self._transform_annotation
     
     @property
     def visualization_key(self):
@@ -72,6 +73,7 @@ class TransformView:
 VRichardsonLucyDeconv = partial(
     TransformView,
     RichardsonLucyDeconv,
+    transform_annotation='Improves sharpness.',
     psf_size=SliderParams(view_name='PSF Size', current_value=4, min=2, max=9, step=1, dtype=int, annotation='Point spread function kernel size, kernel is square and uniform.'),
     num_iter=SliderParams(view_name='Number of iterations', current_value=4, min=1, max=30, step=1, dtype=int, annotation='This parameter plays the role of regularisation. See skimage.restoration.richardson_lucy')
 )
@@ -80,6 +82,7 @@ VRichardsonLucyDeconv = partial(
 VBinarize = partial(
     TransformView,
     Binarize,
+    transform_annotation='Selecting the binarization threshold. Select a threshold so that all fibers in focus are clearly visible.',
     threshold=SliderParams(view_name='Threshold', current_value=0.5, min=0, max=1, step=0.01, dtype=float, annotation='Binary threshold for grayscaled image.')
 )
 
@@ -87,6 +90,7 @@ VBinarize = partial(
 VOpening = partial(
     TransformView,
     Opening,
+    transform_annotation='Filtering “porous” fibers after setting the threshold. Select it so that all unnecessary porous fibers are removed.',
     radius=SliderParams(view_name='Opening size', current_value=5, min=0, max=16, step=1, dtype=int, annotation='Kernel size for binary opening operation. This is approximately the maximum size of the connectivity components to be removed.')
 )
 
@@ -94,6 +98,7 @@ VOpening = partial(
 VCCSFilter = partial(
     TransformView,
     CCSFilter,
+    transform_annotation='Filtering small components. Select a threshold to remove unnecessary small components.',
     min_ratio=SliderParams(view_name='Min size ratio', current_value=1e-3, min=1e-4, max=1e-2, step=1e-4, dtype=float, annotation='The ratio of the connectivity component volume to the image volume, below which the connectivity component is removed.')
 )
 
@@ -101,15 +106,17 @@ VCCSFilter = partial(
 VSkeletonizeEDT = partial(
     TransformView,
     SkeletonizeEDT,
-    threshold_abs=SliderParams(view_name='Min dist', current_value=5, min=1, max=50, step=0.1, dtype=float, annotation='Minimum distance from the extremum to the edge.'),
+    transform_annotation="Finding primary axial points. First, set Min dist so that there are enough points you need, then use Min size to filter out the points you don't need.",
     dilation_radius=SliderParams(view_name='Dilation size', current_value=1, min=0, max=4, step=1, dtype=int, annotation='The radius of expansion of the points obtained. Expansion is applied after finding the maximum points.'),
-    min_size=SliderParams(view_name='Min size', current_value=11, min=1, max=1000, step=1, dtype=int, annotation='Min size of connected component, filter is applied at the end.')
+    threshold_abs=SliderParams(view_name='Min dist', current_value=5, min=1, max=50, step=0.1, dtype=float, annotation='Minimum distance from the extremum to the edge.'),
+    min_size=SliderParams(view_name='Min size', current_value=1, min=1, max=1000, step=1, dtype=int, annotation='Min size of connected component, filter is applied at the end.')
 )
 
 
 VLinFit = partial(
     TransformView,
     LinFit,
+    transform_annotation='Final axis interpolation. Select Block size so that the primary lines are sufficiently complete. Typically, the greater the distance between fibers, the larger the Block size. Then filter out unnecessary axes using Minimal r-value and Min filtration recall.',
     block=SliderParams(view_name='Block size', current_value=64, min=4, max=128, step=4, dtype=int, annotation='The size of the block within which interpolation will take place.'),
     abs_rvalue_thr=SliderParams(view_name='Minimal r-value', current_value=0.8, min=0, max=1, step=0.01, dtype=float, annotation='Minimal Pierson correlation coefficient'),
     use_filtration_image=SliderParams(view_name='Use filtration image', current_value=True, min=0, max=1, step=1, dtype=bool, annotation='Whether to use the image from the previous step for additional filtering.'),

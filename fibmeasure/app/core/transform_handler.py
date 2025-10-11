@@ -17,8 +17,13 @@ class TransformHandler:
 
         self.transforms[self.current_transform_idx].set_current_value(name, value)
 
+    @property
     def current_transform_name(self):
         return self.transforms[self.current_transform_idx].transform_name
+    
+    @property
+    def current_transform_annotation(self):
+        return self.transforms[self.current_transform_idx].transform_annotation
 
     def next(self):
         if self.current_transform_idx == len(self.transforms) - 1:
