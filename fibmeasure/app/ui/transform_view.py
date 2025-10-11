@@ -6,82 +6,8 @@ from PIL import Image
 from skimage.io import imread
 
 from .pluggins import HoldButton
-from fibmeasure.fitting.transforms import RichardsonLucyDeconv, Binarize, Opening, CCSFilter, SkeletonizeEDT, LinFit
-
-
-def np_grayscale_to_base64(img):
-    img_min, img_max = float(img.min()), float(img.max())
-    if img_max == img_min:
-        img8 = np.zeros_like(img, dtype=np.uint8)
-    else:
-        img8 = ((img - img_min) / (img_max - img_min) * 255).astype(np.uint8)
-
-    buf = io.BytesIO()
-    Image.fromarray(img8, mode="L").save(buf, format="PNG")
-
-    return base64.b64encode(buf.getvalue()).decode("utf-8")
-
-
-class TransformChain:
-    transforms = [RichardsonLucyDeconv(), Binarize(), Opening(), CCSFilter(), SkeletonizeEDT(), LinFit()]
-
-    def __init__(self, source_image):
-        self.source_image = source_image
-        self.current_transform_idx = 0
-
-        self.transform_result_nodes = {idx: None for idx in range(len(self.transforms))}
-
-    def update_param(self, name, value):
-        # Cached node results invalidation
-        for idx in range(self.current_transform_idx, len(self.transforms)):
-            self.transform_result_nodes[idx] = None
-
-        setattr(self.transforms[self.current_transform_idx], name, value)
-
-    def current_transform_name(self):
-        return self.transforms[self.current_transform_idx].__class__.__name__
-
-    def next(self):
-        if self.current_transform_idx == len(self.transforms) - 1:
-            return False
-
-        self.current_transform_idx += 1
-        return True
-
-    def prev(self):
-        if self.current_transform_idx == 0:
-            return False
-
-        self.current_transform_idx -= 1
-        return True
-
-    def get_result_node(self, transform_idx):
-        if transform_idx == -1:
-            result_node = {'image': self.source_image}
-        else:
-            result_node = self.transform_result_nodes[transform_idx]
-
-        if result_node is None:
-            prev_result_node = self.get_result_node(transform_idx - 1)
-            result_node = self.transforms[transform_idx](prev_result_node)
-            self.transform_result_nodes[transform_idx] = result_node
-
-        return result_node
-
-    def get_result_image(self, transform_idx):
-        if transform_idx == -1:
-            return self.source_image
-
-        result_node = self.get_result_node(transform_idx)
-        visualization_key = self.transforms[transform_idx].get_visualization_key()
-
-        return result_node[visualization_key]
-
-    def get_before_after_images(self):
-        return self.get_result_image(self.current_transform_idx - 1), self.get_result_image(self.current_transform_idx)
-
-    def get_sliders(self):
-        return self.transforms[self.current_transform_idx].get_sliders()
+from fibmeasure.app.core.transform_handler import TransformHandler
+from fibmeasure.app.core.utils import np_grayscale_to_base64
 
 
 class TransformView(ft.View):
@@ -94,7 +20,7 @@ class TransformView(ft.View):
         source_image = imread(source_path, as_gray=True).astype(np.float32)
         self._buffer_image = np_grayscale_to_base64(source_image)
 
-        self.transform_manager = TransformChain(source_image)
+        self.transform_manager = TransformHandler(source_image)
 
         self.prev_btn = ft.ElevatedButton("Previous", on_click=self.prev_click)
         self.next_btn = ft.ElevatedButton("Next", on_click=self.next_click)
@@ -181,7 +107,9 @@ class TransformView(ft.View):
         self.name2value_type = {}
         self.name2param_text = {}
 
-        for name, (min, max, step, curr_value, value_type) in self.transform_manager.get_sliders().items():
+        for name, slider_params in self.transform_manager.get_sliders().items():
+            min, max, step, curr_value, value_type = slider_params.min, slider_params.max, slider_params.step, slider_params.current_value, slider_params.dtype
+
             if value_type == float:
                 division = (max - min) / step
             elif value_type == int:
