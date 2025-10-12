@@ -6,7 +6,7 @@ from skimage.morphology import disk
 from skimage.restoration import richardson_lucy
 
 from .base import Transform
-from .ops import blocked_lin_fit
+from .ops import blocked_line_fitting_tls
 
 
 class RichardsonLucyDeconv(Transform):
@@ -71,9 +71,9 @@ class SkeletonizeEDT(Transform):
         return np.isin(ccs, labels[sizes >= self.min_size])
 
 
-class LinFit(Transform):
-    def __init__(self, abs_rvalue_thr=0.8, block=64, use_filtration_image=True, filtration_thr=0.9):
-        self.abs_rvalue_thr = abs_rvalue_thr
+class LineFittingTLS(Transform):
+    def __init__(self, linearity_thr=200, block=64, use_filtration_image=True, filtration_thr=0.9):
+        self.linearity_thr = linearity_thr
         self.block = block
         self.use_filtration_image = use_filtration_image
         self.filtration_thr = filtration_thr
@@ -81,9 +81,9 @@ class LinFit(Transform):
     def image_lined(self, skeleton, bin_image):
         filtration_image = bin_image if self.use_filtration_image else None
 
-        return blocked_lin_fit(
+        return blocked_line_fitting_tls(
             skeleton,
-            abs_rvalue_thr=self.abs_rvalue_thr,
+            linearity_thr=self.linearity_thr,
             block=self.block,
             filtration_image=filtration_image,
             filtration_thr=self.filtration_thr,

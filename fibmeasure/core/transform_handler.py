@@ -1,8 +1,8 @@
-from .vtransforms import VRichardsonLucyDeconv, VBinarize, VOpening, VCCSFilter, VSkeletonizeEDT, VLinFit
+from .vtransforms import VRichardsonLucyDeconv, VBinarize, VOpening, VCCSFilter, VSkeletonizeEDT, VLineFittingTLS
 
 
 class TransformHandler:
-    transforms = [VRichardsonLucyDeconv(), VBinarize(), VOpening(), VCCSFilter(), VSkeletonizeEDT(), VLinFit()]
+    transforms = [VRichardsonLucyDeconv(), VBinarize(), VOpening(), VCCSFilter(), VSkeletonizeEDT(), VLineFittingTLS()]
 
     def __init__(self, source_image):
         self.source_image = source_image

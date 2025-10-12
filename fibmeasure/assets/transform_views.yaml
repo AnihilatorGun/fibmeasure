@@ -77,7 +77,7 @@ SkeletonizeEDT:
       dtype: int
       annotation: 'Min size of connected component, filter is applied at the end.'
 
-LinFit:
+LineFittingTLS:
   transform_annotation: 'Select Block size so that the primary lines are sufficiently complete. Typically, the greater the distance between fibers, the larger the Block size. Then filter out unnecessary axes using Minimal r-value and Min filtration recall.'
   block:
       view_name: 'Block size'
@@ -87,14 +87,14 @@ LinFit:
       step: 4
       dtype: int
       annotation: 'The size of the block within which interpolation will take place.'
-  abs_rvalue_thr:
-      view_name: 'Minimal r-value'
-      current_value: 0.8
+  linearity_thr:
+      view_name: 'Linearity threshold1'
+      current_value: 450
       min: 0
-      max: 1
-      step: 0.01
-      dtype: float
-      annotation: 'Minimal Pierson correlation coefficient'
+      max: 1500
+      step: 1
+      dtype: int
+      annotation: 'Minimum ratio of eigenvectors'
   use_filtration_image:
       view_name: 'Use filtration image'
       current_value: True
