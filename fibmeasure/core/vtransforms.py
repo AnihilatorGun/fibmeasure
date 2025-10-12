@@ -53,8 +53,9 @@ class TransformView:
         self._visualization_key = visualization_key
 
         if visualization_key is None:
-            if len(self._transform._transform_methods) == 1:
-                self._visualization_key = self._transform._transform_methods[0].__name__
+            if len(self._transform._transform_name2transform_and_params) == 1:
+                for transform_name in self._transform._transform_name2transform_and_params:
+                    self._visualization_key = transform_name
             else:
                 raise ValueError(
                     f'{self._transform.__class__.__name__} has multiple transformation fields, provide visualization_key manually'
