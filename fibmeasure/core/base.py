@@ -1,10 +1,13 @@
 from copy import copy
 from inspect import signature, isfunction
+from typing import Any
+
+
+type Output = Any
 
 
 class Transform:
     _transform_methods = []
-    _visualization_key = None
 
     def __init_subclass__(cls, **kwargs):
         super().__init_subclass__(**kwargs)
@@ -13,56 +16,69 @@ class Transform:
         for name, method in cls.__dict__.items():
             if isfunction(method) and not name.startswith("_"):
                 cls._transform_methods.append(method)
-                last_name = name
-
-        if len(cls._transform_methods) == 1:
-            cls._visualization_key = last_name
-
-    def __getattribute__(self, name):
-        value = super().__getattribute__(name)
-
-        if name == '_visualization_key' and value is None:
-            raise ValueError(
-                f'{self.__class__.__name__} implemented with multiple transformations. Set _visualization_key manually'
-            )
-
-        return value
 
     def __call__(self, data_node):
-        new_data_node = copy(data_node)
+        new_data_node = {}
+        name2transform_and_required_output_names = {}
 
         for transform_method in self._transform_methods:
             name = transform_method.__name__
             transform_signature = signature(transform_method)
-            params_dict = {}
+            required_output_names = []
+            other_param_names = []
+            
+            for param in transform_signature.parameters.values():
+                param_name = param.name
+                param_annotation = param.annotation
+                
+                if param_annotation == Output:
+                    required_output_names.append(param_name)
+                else:
+                    other_param_names.append(param_name)
 
-            for param in transform_signature.parameters:
-                if param != 'self':
-                    if param not in data_node:
-                        raise ValueError(f'{self.__class__.__name__}.{name} requires {param}')
+            name2transform_and_required_output_names[name] = (transform_method, required_output_names, other_param_names)
 
-                    params_dict[param] = data_node[param]
+        # Validation
+        for transform_name, (_, required_output_names, _) in name2transform_and_required_output_names.items():
+            for required_output in required_output_names:
+                if required_output not in name2transform_and_required_output_names:
+                    raise RuntimeError(f'{transform_name} requires {required_output} to be implemented as Output field')
 
-            result = transform_method(self, **params_dict)
-            new_data_node[name] = result
+                if len(name2transform_and_required_output_names[required_output][1]) != 0:
+                    raise RuntimeError(f'{transform_name} requires {required_output}, but implemented method for {required_output} also requires Output')
+
+        # First pass - only methods that do not require output
+        for transform_name, (transform_method, required_output_names, other_param_names) in name2transform_and_required_output_names.items():
+            if len(required_output_names) == 0:
+                params_dict = {}
+
+                for param_name in other_param_names:
+                    if param_name != 'self':
+                        if param_name not in data_node:
+                            raise ValueError(f'{self.__class__.__name__}.{transform_name} requires {param_name}')
+
+                        params_dict[param_name] = data_node[param_name]
+
+                result = transform_method(self, **params_dict)
+                new_data_node[transform_name] = result
+
+        # Second pass - only methods that require output
+        for transform_name, (transform_method, required_output_names, other_param_names) in name2transform_and_required_output_names.items():
+            if len(required_output_names) != 0:
+                params_dict = {required_output_name: new_data_node[required_output_name] for required_output_name in required_output_names}
+
+                for param_name in other_param_names:
+                    if param_name != 'self':
+                        if param_name not in data_node:
+                            raise ValueError(f'{self.__class__.__name__}.{transform_name} requires {param_name}')
+
+                        params_dict[param_name] = data_node[param_name]
+
+                result = transform_method(self, **params_dict)
+                new_data_node[transform_name] = result
+
+        for name, value in data_node.items():
+            if name not in new_data_node:
+                new_data_node[name] = value
 
         return new_data_node
-
-    def get_visualization_key(self):
-        return self._visualization_key
-
-    def configure_slider(self, name, min, max, step, value_type):
-        if not hasattr(self, 'slider_configs'):
-            self.slider_configs = {}
-
-        self.slider_configs[name] = (min, max, step, value_type)
-
-    def get_sliders(self):
-        slider_configs = getattr(self, 'slider_configs', {})
-
-        slider_params = {}
-
-        for param, (min, max, step, value_type) in slider_configs.items():
-            slider_params[param] = (min, max, step, getattr(self, param), value_type)
-
-        return slider_params

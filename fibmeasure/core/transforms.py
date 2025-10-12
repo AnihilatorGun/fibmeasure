@@ -5,8 +5,8 @@ from skimage.feature import peak_local_max
 from skimage.morphology import disk
 from skimage.restoration import richardson_lucy
 
-from .base import Transform
-from .ops import blocked_line_fitting_tls
+from .base import Transform, Output
+from .ops import blocked_line_fitting_tls, visualize_fitting
 
 
 class RichardsonLucyDeconv(Transform):
@@ -78,7 +78,10 @@ class LineFittingTLS(Transform):
         self.use_filtration_image = use_filtration_image
         self.filtration_thr = filtration_thr
 
-    def image_lined(self, skeleton, bin_image):
+    def image_lined(self, fitting_results: Output):
+        return visualize_fitting(fitting_results)
+
+    def fitting_results(self, skeleton, bin_image):
         filtration_image = bin_image if self.use_filtration_image else None
 
         return blocked_line_fitting_tls(

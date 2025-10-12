@@ -77,13 +77,13 @@ class TransformView:
 
 
 def _config2view_params(config):
-    view_params = {'transform_annotation': config['transform_annotation']}
+    view_params = {}
 
-    for slider_name, slider_params in config.items():
-        if slider_name != 'transform_annotation':
-            slider_params_parsed = copy(slider_params)
+    for name, value in config.items():
+        if isinstance(value, dict):
+            slider_params_parsed = copy(value)
 
-            match slider_params['dtype']:
+            match slider_params_parsed['dtype']:
                 case 'int':
                     dtype = int
                 case 'float':
@@ -91,15 +91,17 @@ def _config2view_params(config):
                 case 'bool':
                     dtype = bool
                 case _:
-                    raise ValueError(f'Unknown dtype in {slider_name} - {dtype}')
+                    raise ValueError(f'Unknown dtype in {name} - {dtype}')
                 
             slider_params_parsed['dtype'] = dtype
 
-            for slider_param_name, slider_param_value in slider_params.items():
+            for slider_param_name, slider_param_value in value.items():
                 if slider_param_name != 'dtype' and slider_param_name != 'annotation' and slider_param_name != 'view_name':
                     slider_params_parsed[slider_param_name] = dtype(slider_param_value)
 
-            view_params[slider_name] = SliderParams(**slider_params_parsed)
+            view_params[name] = SliderParams(**slider_params_parsed)
+        else:
+            view_params[name] = value
 
     return view_params
 
