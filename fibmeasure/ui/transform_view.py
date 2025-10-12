@@ -7,8 +7,6 @@ from fibmeasure.core.transform_handler import TransformHandler
 from fibmeasure.core.utils import np_grayscale_to_base64
 
 
-IMAGE_WIDTH_RATIO = 0.5
-IMAGE_HEIGHT_RATIO = 0.6
 SLIDER_TEXT_ANNOTATION_WIDTH_PX = 500
 
 
@@ -24,62 +22,75 @@ class TransformView(ft.View):
 
         self.transform_manager = TransformHandler(source_image)
 
-        self.prev_btn = ft.ElevatedButton("Previous", on_click=self.prev_click)
-        self.next_btn = ft.ElevatedButton("Next", on_click=self.next_click)
+        self.prev_btn = ft.CupertinoFilledButton("Previous", on_click=self.prev_click)
+        self.next_btn = ft.CupertinoFilledButton("Next", on_click=self.next_click)
         self.show_source_btn = HoldButton(
             'Show source image',
             self.swap_right_image_with_buffer_image,
             self.swap_right_image_with_buffer_image,
+            text_size=18
         )
 
-        image_width = page.window.width * IMAGE_WIDTH_RATIO
-        image_height = page.window.height * IMAGE_HEIGHT_RATIO
-        self.before_image = ft.Image(width=image_width, height=image_height, fit=ft.ImageFit.CONTAIN)
-        self.after_image = ft.Image(width=image_width, height=image_height, fit=ft.ImageFit.CONTAIN)
+        self.before_image = ft.Image(expand=True, fit=ft.ImageFit.CONTAIN)
+        self.after_image = ft.Image(expand=True, fit=ft.ImageFit.CONTAIN)
 
         self.header_text = ft.Text(
-            f"Transform {self.transform_manager.current_transform_name}", size=32, weight="bold"
+            f"Transform {self.transform_manager.current_transform_name}", size=28, weight="bold"
         )
         self.transform_annotation_text = ft.Text(
-            self.transform_manager.current_transform_annotation, size=24
+            self.transform_manager.current_transform_annotation, size=18
         )
 
         self.slider_view = ft.Column(
             self.build_slider_view_content(),
             alignment=ft.MainAxisAlignment.CENTER,
             horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+            scroll=ft.ScrollMode.AUTO,
+            spacing=25
         )
 
         self.controls = [
             ft.Container(
                 ft.Column(
-                    [
-                        ft.Row(
-                            [
-                                self.header_text,
-                                self.show_source_btn,
-                            ],
-                            alignment=ft.MainAxisAlignment.CENTER,
+                    [   
+                        ft.Container(
+                            ft.Column(
+                                [
+                                    ft.Row(
+                                        [
+                                            self.header_text,
+                                            self.show_source_btn,
+                                            self.prev_btn,
+                                            self.next_btn
+                                        ],
+                                        alignment=ft.MainAxisAlignment.CENTER
+                                    ),
+                                    self.transform_annotation_text,
+                                    ft.Row(
+                                        [
+                                            self.before_image,
+                                            self.after_image
+                                        ],
+                                        alignment=ft.MainAxisAlignment.CENTER,
+                                        expand=True
+                                    )
+                                ],
+                                horizontal_alignment=ft.CrossAxisAlignment.CENTER
+                            ),
+                            expand=8
                         ),
-                        self.transform_annotation_text,
-                        ft.Row(
-                            [
-                                self.before_image,
-                                self.after_image,
-                            ],
-                            alignment=ft.MainAxisAlignment.CENTER,
-                        ),
-                        self.slider_view,
-                        ft.Row(
-                            [self.prev_btn, self.next_btn],
-                            alignment=ft.MainAxisAlignment.CENTER,
-                        ),
+
+                        ft.Container(
+                            self.slider_view,
+                            expand=2
+                        )
                     ],
-                    alignment=ft.MainAxisAlignment.CENTER,
-                    horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+                    alignment=ft.alignment.top_center,
+                    expand=True,
                 ),
                 alignment=ft.alignment.center,
                 expand=True,
+                padding=15
             )
         ]
 

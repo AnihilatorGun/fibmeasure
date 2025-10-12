@@ -2,7 +2,7 @@ import flet as ft
 
 
 class HoldButton(ft.GestureDetector):
-    def __init__(self, text, on_hold_start=None, on_hold_end=None, *, width: int | None = None, height: int | None = None):
+    def __init__(self, text, on_hold_start=None, on_hold_end=None, *, text_size: int = 14, width: int | None = None, height: int | None = None):
         self._on_hold_start = on_hold_start
         self._on_hold_end = on_hold_end
         self._holding = False
@@ -12,7 +12,7 @@ class HoldButton(ft.GestureDetector):
         self._pressed_color = ft.Colors.BLUE_800
 
         self._container = ft.Container(
-            content=ft.Text(text, color=ft.Colors.WHITE),
+            content=ft.Text(text, color=ft.Colors.WHITE, size=text_size),
             bgcolor=self._enabled_color,
             border_radius=8,
             padding=10,
