@@ -45,7 +45,7 @@ class TransformView(ft.View):
             self.build_slider_view_content(),
             alignment=ft.MainAxisAlignment.CENTER,
             horizontal_alignment=ft.CrossAxisAlignment.CENTER,
-            scroll=ft.ScrollMode.AUTO,
+            scroll=ft.ScrollMode.ALWAYS,
             spacing=25
         )
 
@@ -56,15 +56,7 @@ class TransformView(ft.View):
                         ft.Container(
                             ft.Column(
                                 [
-                                    ft.Row(
-                                        [
-                                            self.header_text,
-                                            self.show_source_btn,
-                                            self.prev_btn,
-                                            self.next_btn
-                                        ],
-                                        alignment=ft.MainAxisAlignment.CENTER
-                                    ),
+                                    self.header_text,
                                     self.transform_annotation_text,
                                     ft.Row(
                                         [
@@ -73,22 +65,34 @@ class TransformView(ft.View):
                                         ],
                                         alignment=ft.MainAxisAlignment.CENTER,
                                         expand=True
-                                    )
+                                    ),
                                 ],
-                                horizontal_alignment=ft.CrossAxisAlignment.CENTER
+                                horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+                                expand=True
                             ),
-                            expand=8
+                            expand=15
                         ),
-
                         ft.Container(
                             self.slider_view,
-                            expand=2
+                            expand=4
+                        ),
+                        ft.Container(
+                            ft.Row(
+                                [
+                                    self.prev_btn,
+                                    self.show_source_btn,
+                                    self.next_btn
+                                ],
+                                alignment=ft.MainAxisAlignment.CENTER,
+                                spacing=25
+                            ),
+                            expand=1
                         )
                     ],
                     alignment=ft.alignment.top_center,
+                    horizontal_alignment=ft.CrossAxisAlignment.CENTER,
                     expand=True,
                 ),
-                alignment=ft.alignment.center,
                 expand=True,
                 padding=15
             )

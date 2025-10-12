@@ -78,7 +78,7 @@ SkeletonizeEDT:
       annotation: 'Min size of connected component, filter is applied at the end.'
 
 LinFit:
-  transform_annotation: 'Final axis interpolation. Select Block size so that the primary lines are sufficiently complete. Typically, the greater the distance between fibers, the larger the Block size. Then filter out unnecessary axes using Minimal r-value and Min filtration recall.'
+  transform_annotation: 'Select Block size so that the primary lines are sufficiently complete. Typically, the greater the distance between fibers, the larger the Block size. Then filter out unnecessary axes using Minimal r-value and Min filtration recall.'
   block:
       view_name: 'Block size'
       current_value: 64
