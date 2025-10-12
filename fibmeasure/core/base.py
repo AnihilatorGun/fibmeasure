@@ -1,83 +1,91 @@
-from copy import copy
+from dataclasses import dataclass
 from inspect import signature, isfunction
-from typing import Any
+from typing import Any, Callable, List
 
 
 type Output = Any
 
 
+@dataclass(frozen=True)
+class TransformSpec:
+    method: Callable
+    dependencies: List[str]
+    params: List[str]
+
+
 class Transform:
-    _transform_name2transform_and_params = {}
+    """
+    Base class for defining data transformations with declarative dependencies.
+
+    A transformation is defined as a method of a subclass. 
+    Methods can depend on outputs of other methods via `Output` annotation.
+    Supports only depth-1 dependencies (Output of Output not allowed).
+    """
+    _name2transform_spec: dict[str, TransformSpec] = {}
 
     def __init_subclass__(cls, **kwargs):
         super().__init_subclass__(**kwargs)
-        cls._transform_name2transform_and_params = {}
+        if cls is Transform:
+            return
+
+        cls._name2transform_spec = {}
 
         for name, method in cls.__dict__.items():
             if isfunction(method) and not name.startswith("_"):
-                transform_signature = signature(method)
-                required_output_names = []
-                other_param_names = []
-
-                for param in transform_signature.parameters.values():
-                    param_name = param.name
-                    param_annotation = param.annotation
-                    
-                    if param_annotation == Output:
-                        required_output_names.append(param_name)
+                sig = signature(method)
+                deps, params = [], []
+                for param in sig.parameters.values():
+                    if param.annotation == Output:
+                        deps.append(param.name)
                     else:
-                        other_param_names.append(param_name)
+                        params.append(param.name)
 
-                cls._transform_name2transform_and_params[name] = (method, required_output_names, other_param_names)
+                cls._name2transform_spec[name] = TransformSpec(method, deps, params)
 
-        for transform_name, (_, required_output_names, other_param_names) in cls._transform_name2transform_and_params.items():
-            for required_output in required_output_names:
-                if required_output not in cls._transform_name2transform_and_params:
+        # validate dependencies
+        for name, spec in cls._name2transform_spec.items():
+            for dep in spec.dependencies:
+                if dep not in cls._name2transform_spec:
                     raise RuntimeError(
-                        f'{transform_name} requires {required_output} to be implemented ({required_output} has Output annotation)'
+                        f"{cls.__name__}.{name} requires output '{dep}', "
+                        f"but no method '{dep}' is defined."
                     )
 
-                if len(cls._transform_name2transform_and_params[required_output][1]) != 0:
+                if cls._name2transform_spec[dep].dependencies:
                     raise RuntimeError(
-                        f'{transform_name} requires {required_output}, but '
-                        f'implemented method for {required_output} also requires Output'
+                        f"{cls.__name__}.{name} requires '{dep}', but '{dep}' "
+                        f"also requires an Output (depth > 1 not allowed)."
                     )
 
-    def __call__(self, data_node):
-        new_data_node = {}
+    def _run_transforms(self, inputs, outputs, require_output: bool):
+        for name, spec in self._name2transform_spec.items():
+            if (len(spec.dependencies) != 0) != require_output:
+                continue
 
-        # First pass - only methods that do not require output
-        for transform_name, (transform_method, required_output_names, other_param_names) in self._transform_name2transform_and_params.items():
-            if len(required_output_names) == 0:
-                params_dict = {}
+            params = {}
+            for dep in spec.dependencies:
+                if dep not in outputs:
+                    raise ValueError(f"{name} depends on missing output '{dep}'")
 
-                for param_name in other_param_names:
-                    if param_name != 'self':
-                        if param_name not in data_node:
-                            raise ValueError(f'{self.__class__.__name__}.{transform_name} requires {param_name}')
+                params[dep] = outputs[dep]
 
-                        params_dict[param_name] = data_node[param_name]
+            for p in spec.params:
+                if p == "self":
+                    continue
 
-                result = transform_method(self, **params_dict)
-                new_data_node[transform_name] = result
+                if p not in inputs:
+                    raise ValueError(f"{self.__class__.__name__}.{name} requires '{p}'")
 
-        # Second pass - only methods that require output
-        for transform_name, (transform_method, required_output_names, other_param_names) in self._transform_name2transform_and_params.items():
-            if len(required_output_names) != 0:
-                params_dict = {required_output_name: new_data_node[required_output_name] for required_output_name in required_output_names}
+                params[p] = inputs[p]
 
-                for param_name in other_param_names:
-                    if param_name != 'self':
-                        if param_name not in data_node:
-                            raise ValueError(f'{self.__class__.__name__}.{transform_name} requires {param_name}')
+            outputs[name] = spec.method(self, **params)
 
-                        params_dict[param_name] = data_node[param_name]
+    def __call__(self, inputs: dict[str, Any]) -> dict[str, Any]:
+        outputs = {}
+        self._run_transforms(inputs, outputs, require_output=False)
+        self._run_transforms(inputs, outputs, require_output=True)
 
-                result = transform_method(self, **params_dict)
-                new_data_node[transform_name] = result
+        for k, v in inputs.items():
+            outputs.setdefault(k, v)
 
-        for name, value in data_node.items():
-            if name not in new_data_node:
-                new_data_node[name] = value
-
-        return new_data_node
+        return outputs

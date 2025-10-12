@@ -53,8 +53,8 @@ class TransformView:
         self._visualization_key = visualization_key
 
         if visualization_key is None:
-            if len(self._transform._transform_name2transform_and_params) == 1:
-                for transform_name in self._transform._transform_name2transform_and_params:
+            if len(self._transform._name2transform_spec) == 1:
+                for transform_name in self._transform._name2transform_spec:
                     self._visualization_key = transform_name
             else:
                 raise ValueError(
