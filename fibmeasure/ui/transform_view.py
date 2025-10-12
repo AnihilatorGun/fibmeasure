@@ -3,8 +3,8 @@ import numpy as np
 from skimage.io import imread
 
 from .pluggins import HoldButton
-from fibmeasure.app.core.transform_handler import TransformHandler
-from fibmeasure.app.core.utils import np_grayscale_to_base64
+from fibmeasure.core.transform_handler import TransformHandler
+from fibmeasure.core.utils import np_grayscale_to_base64
 
 
 IMAGE_WIDTH_RATIO = 0.5

@@ -1,7 +1,7 @@
 from copy import copy
 from dataclasses import dataclass, asdict
 from functools import partial, cache
-from fibmeasure.fitting import transforms
+from . import transforms
 from ..assets import TRANSFORM_VIEW_ASSETS
 
 
