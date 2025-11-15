@@ -1,11 +1,11 @@
 from .vtransforms import (
-    VRichardsonLucyDeconv,
     VBinarize,
-    VOpening,
     VCCSFilter,
-    VSkeletonizeEDT,
     VLineFittingTLS,
+    VOpening,
+    VRichardsonLucyDeconv,
     VSegmentsThickness,
+    VSkeletonizeEDT,
 )
 
 

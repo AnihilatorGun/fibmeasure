@@ -5,8 +5,8 @@ from skimage.feature import peak_local_max
 from skimage.morphology import disk
 from skimage.restoration import richardson_lucy
 
-from .base import Transform, Output
-from .ops import blocked_line_fitting_tls, visualize_fitting, measure_thickness
+from .base import Output, Transform
+from .ops import blocked_line_fitting_tls, measure_thickness, visualize_fitting
 from .utils import draw_segments_on_image
 
 

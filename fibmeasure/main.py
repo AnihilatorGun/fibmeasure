@@ -1,6 +1,7 @@
 import flet as ft
-from ui.upload_view import UploadView
 from ui.transform_view import TransformView
+from ui.upload_view import UploadView
+
 
 # from .ui.result_view import ResultView
 

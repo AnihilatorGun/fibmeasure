@@ -2,9 +2,10 @@ import flet as ft
 import numpy as np
 from skimage.io import imread
 
-from .pluggins import HoldButton
 from fibmeasure.core.transform_handler import TransformHandler
 from fibmeasure.core.utils import np_image_to_base64
+
+from .pluggins import HoldButton
 
 
 SLIDER_TEXT_ANNOTATION_WIDTH_PX = 500

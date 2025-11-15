@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from inspect import signature, isfunction
+from inspect import isfunction, signature
 from typing import Any, Callable, List
 
 
