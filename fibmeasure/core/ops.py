@@ -210,7 +210,7 @@ def measure_fiber_thickness_with_jitter(
     lengths_percentile = np.percentile(lengths, q=lp, axis=-1)
     angle_indices = np.arange(len(angles))
     best_idx = np.array(
-        [np.mean(angle_indices[length <= length_p]) for length, length_p in zip(lengths, lengths_percentile)]
+        [np.mean(angle_indices[length < (length_p + 1e-5)]) for length, length_p in zip(lengths, lengths_percentile)]
     )
     best_idx = np.round(best_idx).astype(int)
 
