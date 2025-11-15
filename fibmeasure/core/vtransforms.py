@@ -93,11 +93,15 @@ def _config2view_params(config):
                     dtype = bool
                 case _:
                     raise ValueError(f'Unknown dtype in {name} - {dtype}')
-                
+
             slider_params_parsed['dtype'] = dtype
 
             for slider_param_name, slider_param_value in value.items():
-                if slider_param_name != 'dtype' and slider_param_name != 'annotation' and slider_param_name != 'view_name':
+                if (
+                    slider_param_name != 'dtype'
+                    and slider_param_name != 'annotation'
+                    and slider_param_name != 'view_name'
+                ):
                     slider_params_parsed[slider_param_name] = dtype(slider_param_value)
 
             view_params[name] = SliderParams(**slider_params_parsed)
@@ -111,7 +115,7 @@ def _config2view_params(config):
 def __getattr__(name):
     if name == "__path__":
         return []
-    
+
     if name.startswith("__") and name.endswith("__"):
         raise AttributeError(name)
 

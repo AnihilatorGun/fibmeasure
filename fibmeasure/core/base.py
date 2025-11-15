@@ -17,10 +17,11 @@ class Transform:
     """
     Base class for defining data transformations with declarative dependencies.
 
-    A transformation is defined as a method of a subclass. 
+    A transformation is defined as a method of a subclass.
     Methods can depend on outputs of other methods via `Output` annotation.
     Supports only depth-1 dependencies (Output of Output not allowed).
     """
+
     _name2transform_spec: dict[str, TransformSpec] = {}
 
     def __init_subclass__(cls, **kwargs):
@@ -47,8 +48,7 @@ class Transform:
             for dep in spec.dependencies:
                 if dep not in cls._name2transform_spec:
                     raise RuntimeError(
-                        f"{cls.__name__}.{name} requires output '{dep}', "
-                        f"but no method '{dep}' is defined."
+                        f"{cls.__name__}.{name} requires output '{dep}', " f"but no method '{dep}' is defined."
                     )
 
                 if cls._name2transform_spec[dep].dependencies:

@@ -2,7 +2,16 @@ import flet as ft
 
 
 class HoldButton(ft.GestureDetector):
-    def __init__(self, text, on_hold_start=None, on_hold_end=None, *, text_size: int = 14, width: int | None = None, height: int | None = None):
+    def __init__(
+        self,
+        text,
+        on_hold_start=None,
+        on_hold_end=None,
+        *,
+        text_size: int = 14,
+        width: int | None = None,
+        height: int | None = None,
+    ):
         self._on_hold_start = on_hold_start
         self._on_hold_end = on_hold_end
         self._holding = False
@@ -37,9 +46,7 @@ class HoldButton(ft.GestureDetector):
     @disabled.setter
     def disabled(self, value: bool):
         self._disabled = bool(value)
-        self._container.bgcolor = (
-            self._disabled_color if self._disabled else self._enabled_color
-        )
+        self._container.bgcolor = self._disabled_color if self._disabled else self._enabled_color
 
         # Bypass initial disable=False setting
         if getattr(self._container, "_Control__page", None) is not None:

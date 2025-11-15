@@ -4,7 +4,7 @@ from skimage.io import imread
 
 from .pluggins import HoldButton
 from fibmeasure.core.transform_handler import TransformHandler
-from fibmeasure.core.utils import np_grayscale_to_base64
+from fibmeasure.core.utils import np_image_to_base64
 
 
 SLIDER_TEXT_ANNOTATION_WIDTH_PX = 500
@@ -18,7 +18,7 @@ class TransformView(ft.View):
         source_path = page.session.get("source_path")
 
         source_image = imread(source_path, as_gray=True).astype(np.float32)
-        self._buffer_image = np_grayscale_to_base64(source_image)
+        self._buffer_image = np_image_to_base64(source_image)
 
         self.transform_manager = TransformHandler(source_image)
 
@@ -28,73 +28,59 @@ class TransformView(ft.View):
             'Show source image',
             self.swap_right_image_with_buffer_image,
             self.swap_right_image_with_buffer_image,
-            text_size=18
+            text_size=18,
         )
 
         self.before_image = ft.Image(expand=True, fit=ft.ImageFit.CONTAIN)
         self.after_image = ft.Image(expand=True, fit=ft.ImageFit.CONTAIN)
 
-        self.header_text = ft.Text(
-            f"Transform {self.transform_manager.current_transform_name}", size=28, weight="bold"
-        )
-        self.transform_annotation_text = ft.Text(
-            self.transform_manager.current_transform_annotation, size=18
-        )
+        self.header_text = ft.Text(f"Transform {self.transform_manager.current_transform_name}", size=28, weight="bold")
+        self.transform_annotation_text = ft.Text(self.transform_manager.current_transform_annotation, size=18)
 
         self.slider_view = ft.Column(
             self.build_slider_view_content(),
             alignment=ft.MainAxisAlignment.CENTER,
             horizontal_alignment=ft.CrossAxisAlignment.CENTER,
             scroll=ft.ScrollMode.ALWAYS,
-            spacing=25
+            spacing=25,
         )
 
         self.controls = [
             ft.Container(
                 ft.Column(
-                    [   
+                    [
                         ft.Container(
                             ft.Column(
                                 [
                                     self.header_text,
                                     self.transform_annotation_text,
                                     ft.Row(
-                                        [
-                                            self.before_image,
-                                            self.after_image
-                                        ],
+                                        [self.before_image, self.after_image],
                                         alignment=ft.MainAxisAlignment.CENTER,
-                                        expand=True
+                                        expand=True,
                                     ),
                                 ],
                                 horizontal_alignment=ft.CrossAxisAlignment.CENTER,
-                                expand=True
+                                expand=True,
                             ),
-                            expand=15
+                            expand=15,
                         ),
-                        ft.Container(
-                            self.slider_view,
-                            expand=4
-                        ),
+                        ft.Container(self.slider_view, expand=4),
                         ft.Container(
                             ft.Row(
-                                [
-                                    self.prev_btn,
-                                    self.show_source_btn,
-                                    self.next_btn
-                                ],
+                                [self.prev_btn, self.show_source_btn, self.next_btn],
                                 alignment=ft.MainAxisAlignment.CENTER,
-                                spacing=25
+                                spacing=25,
                             ),
-                            expand=1
-                        )
+                            expand=1,
+                        ),
                     ],
                     alignment=ft.alignment.top_center,
                     horizontal_alignment=ft.CrossAxisAlignment.CENTER,
                     expand=True,
                 ),
                 expand=True,
-                padding=15
+                padding=15,
             )
         ]
 
@@ -120,8 +106,8 @@ class TransformView(ft.View):
 
     def update_images(self):
         before_image, after_image = self.transform_manager.get_before_after_images()
-        self.before_image.src_base64 = np_grayscale_to_base64(before_image)
-        self.after_image.src_base64 = np_grayscale_to_base64(after_image)
+        self.before_image.src_base64 = np_image_to_base64(before_image)
+        self.after_image.src_base64 = np_image_to_base64(after_image)
 
     def update_slider_text(self, name, view_name, value):
         if isinstance(value, float):

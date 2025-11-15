@@ -1,8 +1,24 @@
-from .vtransforms import VRichardsonLucyDeconv, VBinarize, VOpening, VCCSFilter, VSkeletonizeEDT, VLineFittingTLS
+from .vtransforms import (
+    VRichardsonLucyDeconv,
+    VBinarize,
+    VOpening,
+    VCCSFilter,
+    VSkeletonizeEDT,
+    VLineFittingTLS,
+    VSegmentsThickness,
+)
 
 
 class TransformHandler:
-    transforms = [VRichardsonLucyDeconv(), VBinarize(), VOpening(), VCCSFilter(), VSkeletonizeEDT(), VLineFittingTLS()]
+    transforms = [
+        VRichardsonLucyDeconv(),
+        VBinarize(),
+        VOpening(),
+        VCCSFilter(),
+        VSkeletonizeEDT(),
+        VLineFittingTLS(),
+        VSegmentsThickness(),
+    ]
 
     def __init__(self, source_image):
         self.source_image = source_image
@@ -20,7 +36,7 @@ class TransformHandler:
     @property
     def current_transform_name(self):
         return self.transforms[self.current_transform_idx].transform_name
-    
+
     @property
     def current_transform_annotation(self):
         return self.transforms[self.current_transform_idx].transform_annotation

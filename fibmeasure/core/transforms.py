@@ -6,7 +6,8 @@ from skimage.morphology import disk
 from skimage.restoration import richardson_lucy
 
 from .base import Transform, Output
-from .ops import blocked_line_fitting_tls, visualize_fitting
+from .ops import blocked_line_fitting_tls, visualize_fitting, measure_thickness
+from .utils import draw_segments_on_image
 
 
 class RichardsonLucyDeconv(Transform):
@@ -91,3 +92,39 @@ class LineFittingTLS(Transform):
             filtration_image=filtration_image,
             filtration_thr=self.filtration_thr,
         )
+
+
+class SegmentsThickness(Transform):
+    def __init__(
+        self,
+        angles_jitter_deg=10,
+        jitter_step_deg=0.25,
+        intervals_dist=16,
+        max_halfthickness=50,
+        steps_per_pix=4,
+        boundary_threshold=0.45,
+        lp=25,
+    ):
+        self.angles_jitter_deg = angles_jitter_deg
+        self.jitter_step_deg = jitter_step_deg
+        self.intervals_dist = intervals_dist
+        self.max_halfthickness = max_halfthickness
+        self.steps_per_pix = steps_per_pix
+        self.boundary_threshold = boundary_threshold
+        self.lp = lp
+
+    def segments(self, image, fitting_results):
+        return measure_thickness(
+            image,
+            fitting_results,
+            angles_jitter_deg=self.angles_jitter_deg,
+            jitter_step_deg=self.jitter_step_deg,
+            intervals_dist=self.intervals_dist,
+            max_halfthickness=self.max_halfthickness,
+            steps_per_pix=self.steps_per_pix,
+            boundary_threshold=self.boundary_threshold,
+            lp=self.lp,
+        )
+
+    def segments_on_image(self, image, segments: Output):
+        return draw_segments_on_image(image, segments)
