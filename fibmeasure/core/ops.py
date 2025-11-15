@@ -123,6 +123,7 @@ def measure_thickness(
     block_indices = fitting.block_indices
 
     intervals = []
+    drawn_points = None
 
     for (i, j), (A, B, C) in zip(block_indices, params):
         offset = np.array([i * half_block, j * half_block])
@@ -143,6 +144,16 @@ def measure_thickness(
 
         points_mask = (points[:, 0] >= 0) & (points[:, 0] < block) & (points[:, 1] >= 0) & (points[:, 1] < block)
         points = points[points_mask]
+
+        if drawn_points is None:
+            drawn_points = points + offset
+        else:
+            diff = drawn_points[None, :, :] - (points + offset)[:, None, :]  # (P, N, 2)
+            dist_sq = np.sum(diff ** 2, axis=2)  # (P, N)
+            points_mask = np.min(dist_sq, axis=1) > intervals_dist ** 2  # (P)
+            points = points[points_mask]
+
+            drawn_points = np.concatenate([drawn_points, points + offset], axis=0)
 
         segments = measure_fiber_thickness_with_jitter(
             points=points + offset,
