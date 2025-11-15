@@ -11,11 +11,15 @@ from .utils import draw_segments_on_image
 
 
 class RichardsonLucyDeconv(Transform):
-    def __init__(self, psf_size=4, num_iter=4):
+    def __init__(self, psf_size=4, num_iter=4, enabled=False):
         self.psf_size = psf_size
         self.num_iter = num_iter
+        self.enabled = enabled
 
     def image(self, image):
+        if not self.enabled:
+            return image
+
         psf = np.ones((self.psf_size, self.psf_size))
         psf /= psf.size
 

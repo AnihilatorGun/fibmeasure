@@ -1,5 +1,13 @@
 RichardsonLucyDeconv:
   transform_annotation: 'Improves sharpness.'
+  enabled:
+      view_name: 'Enabled'
+      current_value: False
+      min: False
+      max: True
+      step: 1
+      dtype: bool
+      annotation: 'Whether to use Richardson-Lucy deconvolution'
   psf_size:
       view_name: 'PSF Size'
       current_value: 4
